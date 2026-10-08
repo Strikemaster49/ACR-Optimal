@@ -1,5 +1,12 @@
 # Diagnostic ACR en contre-la-montre
 
+## Extraction demontree sur les copies utilisateur
+
+Lancer-Lecture-Secteurs.bat lit experimentalement les secteurs d'Obersteigen /
+Skoda Fabia RS Rally2 dans les copies PlayerDataSaveSlot.sav. Lire
+PREUVE-SAUVEGARDE.fr.md pour les valeurs verifiees, les limites et le test.
+Ce lecteur de preuves ne constitue pas encore un collecteur de records TT.
+
 ## Lanceurs Windows et autorisation temporaire
 
 Extraire TOUS les fichiers, y compris Lancer-Commun.bat. Les trois lanceurs
