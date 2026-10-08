@@ -1,5 +1,11 @@
 # Diagnostic ACR en contre-la-montre
 
+## Nouveau diagnostic du classement de session
+
+Pour comparer avant/apres ouverture et verifier la persistance apres fermeture du
+jeu, lancer Lancer-Classement-Session.bat et suivre TEST-CLASSEMENT-SESSION.fr.md.
+Ce nouvel outil ne remplace pas Diagnostic-ACR.ps1 et ne decode pas encore les secteurs.
+
 Ce paquet ne contient PAS de connecteur solo verifie. Il observe Windows sans
 modifier le jeu, lire sa memoire ou envoyer une requete a ses serveurs. Aucun
 Python, SDK .NET ou paquet a installer : Windows PowerShell 5.1 suffit.
