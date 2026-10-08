@@ -1,5 +1,31 @@
 # Diagnostic ACR en contre-la-montre
 
+## Lanceurs Windows et autorisation temporaire
+
+Extraire TOUS les fichiers, y compris Lancer-Commun.bat. Les trois lanceurs
+verifient les fichiers puis demandent O/N avant de demarrer PowerShell avec
+-ExecutionPolicy Bypass. Cette option ne concerne que le processus lance :
+aucun Set-ExecutionPolicy ni changement permanent de registre n'est effectue.
+N annule le lancement ; la fenetre reste ouverte pour lire le resultat.
+Aucune elevation administrateur n'est demandee. Une politique MachinePolicy ou
+UserPolicy reste prioritaire et un blocage de securite affiche une explication.
+Les controles de votre organisation (GPO, AppLocker, WDAC) peuvent egalement
+bloquer PowerShell ; demander une autorisation ou une version signee a votre
+administrateur, sans chercher a les contourner.
+
+Tests sur Windows : N doit annuler sans demarrer PowerShell ; O doit lancer le
+diagnostic. Tester aussi un dossier contenant des espaces, un PS1 manquant,
+Lancer-Commun.bat manquant et un PID invalide pour Lancer-Diagnostic.bat.
+Pour controler les politiques permanentes, comparer Get-ExecutionPolicy -List
+dans un autre terminal avant et apres. Une politique administrateur restrictive
+doit rester appliquee. Ne pas modifier ces politiques pour effectuer un test.
+
+Verification ici : syntaxe de la commande PowerShell integree valide ; lancement
+d'un script fixture, erreur de script, PSSecurityException simulee, PID valide et
+PID invalide verifies sous PowerShell 7/Linux. Les controles de fichiers et l'ordre
+consentement/lancement ont ete inspectes. Le double-clic BAT, Windows PowerShell
+5.1 et l'application reelle des GPO restent a tester sur Windows.
+
 ## Priorite actuelle : collecte avant fermeture
 
 Lancer-Secteurs-Live.bat surveille les changements de fichiers entre les arrivees

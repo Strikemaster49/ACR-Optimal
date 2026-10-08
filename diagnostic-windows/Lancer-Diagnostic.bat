@@ -1,8 +1,9 @@
 @echo off
 setlocal
-cd /d "%~dp0"
-echo Lancez ACR puis relevez le PID de son processus dans le Gestionnaire des taches.
-set /p "ACR_PID=PID du jeu : "
-powershell.exe -NoProfile -Command "& './Diagnostic-ACR.ps1' -GameProcessId ([int]$env:ACR_PID)"
-if errorlevel 1 echo Echec : consultez le message ci-dessus et les instructions README.fr.md.
+if not exist "%~dp0Lancer-Commun.bat" goto missing_launcher
+call "%~dp0Lancer-Commun.bat" "Diagnostic-ACR.ps1" "PID"
+exit /b %ERRORLEVEL%
+:missing_launcher
+echo ERREUR : Lancer-Commun.bat absent. Extrayez tous les fichiers du ZIP.
 pause
+exit /b 1
