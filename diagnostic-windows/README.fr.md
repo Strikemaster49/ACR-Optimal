@@ -1,5 +1,12 @@
 # Diagnostic ACR en contre-la-montre
 
+## Priorite actuelle : collecte avant fermeture
+
+Lancer-Secteurs-Live.bat surveille les changements de fichiers entre les arrivees
+et les ouvertures du classement. Suivre TEST-SECTEURS-LIVE.fr.md. Les anciennes
+tentatives disparaissent du classement au relancement selon le test utilisateur ;
+leur persistance sur disque et leur recuperation ne sont pas demontrees.
+
 ## Nouveau diagnostic du classement de session
 
 Pour comparer avant/apres ouverture et verifier la persistance apres fermeture du
