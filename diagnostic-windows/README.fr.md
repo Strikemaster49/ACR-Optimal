@@ -1,5 +1,12 @@
 # Diagnostic ACR en contre-la-montre
 
+## Identite des blocs et tentatives
+
+Le lecteur exporte un BlockToken et une AttemptKeyCandidate experimentaux, stables
+sur les six captures fournies. Lire PREUVE-CLES.fr.md et lancer
+Lancer-Comparaison-Cles.bat pour comparer les exports. Un hash de contenu distinct
+permet de signaler les conflits ; aucun import SQLite ni record TT n'est active.
+
 ## Extraction demontree sur les copies utilisateur
 
 Lancer-Lecture-Secteurs.bat lit experimentalement les secteurs d'Obersteigen /
