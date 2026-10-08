@@ -1,4 +1,4 @@
-# Experimental read-only decoder of the layout demonstrated by three user captures.
+# Experimental read-only decoder. Export candidate blocks separately, never infer active session.
 [CmdletBinding()]
 param(
     [string]$SavePath,
@@ -36,6 +36,7 @@ function FString {
 }
 $needle=[Text.Encoding]::UTF8.GetBytes($StageId+[char]0)
 $rows=New-Object 'System.Collections.Generic.List[object]'
+$blocks=New-Object 'System.Collections.Generic.List[object]'
 $candidates=0
 for ($position=4; $position -le $bytes.Length-$needle.Length-4; $position++) {
     if ($bytes[$position] -ne $needle[0]) { continue }
@@ -72,19 +73,25 @@ for ($position=4; $position -le $bytes.Length-$needle.Length-4; $position++) {
             for ($t=0; $t -lt 3; $t++) { if ((UInt32) -ne 0) { throw 'Metadonnees non nulles non prises en charge.' } }
         }
         foreach ($row in $candidate) { $rows.Add($row) }
+        $blocks.Add([pscustomobject]@{BlockOffset=$position; RunCount=$attemptCount; SectorRows=$candidate.Count;
+            Role='unverified'; StageId=$StageId; CarId=$CarId})
         $candidates++
     } catch { continue }
 }
-if ($candidates -ne 1) { throw "Source non reconnue ou ambigue : $candidates blocs compatibles. Aucun chrono exporte." }
+if ($candidates -eq 0) { throw 'Source non reconnue : aucun bloc compatible. Aucun chrono exporte.' }
 $sha=[Security.Cryptography.SHA256]::Create()
 try { $hash=[BitConverter]::ToString($sha.ComputeHash($bytes)).Replace('-','').ToLowerInvariant() } finally { $sha.Dispose() }
 $output=Join-Path $OutputRoot ([DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $rows | Export-Csv (Join-Path $output 'secteurs.csv') -NoTypeInformation -Encoding UTF8
-@{SourceSHA256=$hash; Source=$item.FullName; CandidateBlocks=$candidates; BlockOffset=$rows[0].BlockOffset;
-    RunCount=@($rows | Select-Object RunIndex -Unique).Count; Mode='unverified'; Validity='unverified';
+$blocks | Export-Csv (Join-Path $output 'blocs.csv') -NoTypeInformation -Encoding UTF8
+@{SourceSHA256=$hash; Source=$item.FullName; CandidateBlocks=$candidates;
+    RunCount=@($rows | Select-Object BlockOffset,RunIndex -Unique).Count; Mode='unverified'; Validity='unverified';
+    Blocks=@($blocks.ToArray()); ActiveSession='unverified';
     Layout='Experimental sequential runs, UTF8 car, indexed Float32 cumulative/duration, zero trailer';
     Limitation='Not a production collector. No TT mode or penalty semantics demonstrated.'} |
-    ConvertTo-Json | Set-Content (Join-Path $output 'preuve.json') -Encoding UTF8
+    ConvertTo-Json -Depth 4 | Set-Content (Join-Path $output 'preuve.json') -Encoding UTF8
 Write-Host "Secteurs extraits : $output"
+Write-Host "$candidates bloc(s) candidat(s). Consulter blocs.csv : aucun bloc n'est designe comme session active."
+Write-Host 'RunIndex est local au bloc ; BlockOffset peut changer entre fichiers et ne constitue pas une cle persistante.'
 Write-Host 'Verifiez chaque ligne avec le classement. Mode et validite non verifies : aucun record SQLite cree.'

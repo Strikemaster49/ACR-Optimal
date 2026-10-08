@@ -49,8 +49,37 @@ tests de signature invalide et de speciale inconnue refusent bien l'export.
 Le lancement sur Windows PowerShell 5.1 reste a verifier sur le PC utilisateur.
 Comparer les deux colonnes de temps avec l'ecran. Reouvrir la meme copie produit
 un nouveau dossier de PREUVE ; ce n'est pas encore un import d'historique.
-Un format inconnu, plusieurs blocs correspondants ou des metadonnees non nulles
-entrainent un refus, pas une inference de penalites ou de validite.
+Un format inconnu ou des metadonnees non nulles entrainent un refus du bloc,
+pas une inference de penalites ou de validite. Plusieurs blocs compatibles sont
+maintenant exportes SEPAREMENT par BlockOffset dans secteurs.csv et listes dans
+blocs.csv. Aucune session active n'est choisie automatiquement.
+
+## Deuxieme serie : relancement du jeu et nouveaux index
+
+La copie initiale contient encore un bloc des cinq tentatives precedentes :
+les quatre deja analysees plus un total de 137.1910095 s. Apres la premiere nouvelle
+arrivee, ce bloc reste present mais se deplace de 0x20ad a 0x2026 dans le fichier.
+Un nouveau bloc apparait a 0x21de avec RunIndex 0 ; apres la seconde arrivee,
+ce meme bloc contient RunIndex 0 et 1. Les valeurs sont :
+
+| Nouvelle tentative | Secteur 1 | Secteur 2 | Dernier cumul |
+|---|---|---|---|
+| 1, index 0 | 78.654 s | 59.642 s | 138.296 s |
+| 2, index 1 | 77.960 s | 59.453 s | 137.413 s |
+
+Elles correspondent au classement fourni. Les anciennes tentatives restent donc
+dans CES copies apres relancement, meme si l'interface repart de zero. Les index
+ne sont pas uniques globalement. Il faut identifier le conteneur/session de la
+source pour eviter collisions et reimportations. Les offsets ne sont PAS des
+identifiants persistants : l'ancien bloc s'est deplace alors que ses temps sont
+identiques. La diminution de 11 octets comprend une suppression ailleurs dans
+le fichier et un ajout du nouveau bloc ; elle n'indique pas une simple perte
+de tentatives. La semantique de la zone supprimee reste inconnue.
+
+Attendu avec le nouveau lecteur : 000003 = 1 bloc/5 tentatives/10 secteurs ;
+000004 = 2 blocs/6 tentatives/12 secteurs ; 000005 = 2 blocs/7 tentatives/14 secteurs.
+Ces nombres concernent la deuxieme serie, pas les fichiers homonymes precedents.
+La copie apres abandon n'a pas ete fournie : aucun statut d'abandon n'est etabli.
 
 Le lecteur cherche les identifiants, pas un offset fixe. Il impose la structure
 demontree sur ces echantillons et ne pretend pas etre un parseur complet GVAS.
