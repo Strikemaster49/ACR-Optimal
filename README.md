@@ -27,3 +27,9 @@ observés, conserve plusieurs versions JSON et compare les réglages. Son
 [audit de faisabilité et de licence](setup-engineer/AUDIT.fr.md) explique les
 limites du projet tiers, les unités/plages inconnues et l'absence de liaison
 historique automatique avec les performances. Aucune écriture SAV.
+
+Lancer désormais **Lancer-ACR-Optimal.bat** à la racine : une seule fenêtre avec
+Chronométrage, Performances, Setup Engineer et Historique. Les anciens lanceurs
+ouvrent la même application. [Instructions Windows](interface-windows/README.fr.md).
+Le [script d'installateur unique](packaging-windows/README.fr.md) est préparé ;
+sa compilation et son installation restent à valider sous Windows.

@@ -88,3 +88,12 @@ Tests developpeur : tests/verify_setups.ps1 -ModulePath chemin\SetupEngine.psm1
 votre copie : extraction reelle, valeurs, hashes, versions, comparaison, modification
 SYNTHETIQUE separee, refus des donnees inconnues et source intacte. WPF/double-clic
 et correspondance aux menus doivent encore etre verifies sur votre PC.
+
+## Intégration à l'application principale
+
+Lancer maintenant **Lancer-ACR-Optimal.bat** à la racine, puis la section Setup
+Engineer. Le module est embarqué dans la fenêtre principale. L'ancien lanceur
+ouvre la même application directement sur cette section. L'historique des JSON
+existants est chargé au démarrage ; Actualiser historique recharge sans doublons
+les mêmes fichiers. Les snapshots et la base SQLite restent à leur emplacement.
+Voir [la procédure intégrée](../interface-windows/README.fr.md) pour les tests.
