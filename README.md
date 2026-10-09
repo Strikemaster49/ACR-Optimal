@@ -11,3 +11,7 @@ secteurs réellement récupérés et validés.
 Les outils de preuve sont dans [diagnostic-windows](diagnostic-windows/README.fr.md).
 Une extraction a été démontrée sur des copies de sauvegarde utilisateur, mais
 le collecteur automatique et la validation du mode TT restent à développer.
+
+Le [stockage SQLite expérimental](stockage-windows/README.fr.md) importe les
+exports sans doublons, conserve les données inconnues en quarantaine et prépare
+les statistiques après revue explicite. Il se lance sous Windows sans Python.
