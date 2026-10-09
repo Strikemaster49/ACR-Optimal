@@ -1,61 +1,126 @@
-# Collecteur passif EXPERIMENTAL
+# Collecteur passif pour les sessions quotidiennes
 
-Cette version teste l'enchainement surveillance -> copie -> decodeur -> SQLite.
-Elle ne prouve PAS encore une acquisition automatique fiable a chaque arrivee,
-ne detecte pas le mode du jeu et ne valide jamais automatiquement une tentative.
-Elle ne lit pas la memoire du jeu, ne capture pas le reseau et ne modifie aucun
-fichier du jeu. Source ouverte en lecture partagee, deux lectures egales espacees
- de 600 ms avant copie ; ce controle n'est pas une garantie absolue d'atomicite.
+Dans ACR-Optimal, onglet **Chronométrage** :
 
-## Test simple sur votre PC
+1. Sélectionner la spéciale/voiture. Le format a été vérifié sur Obersteigen /
+   Fabia RS Rally2 ; ne pas présumer la compatibilité des autres combinaisons.
+2. Cocher **Je confirme le contre-la-montre**.
+3. Laisser **Durée test = 0** pour une collecte SANS limite de temps.
+4. Cliquer **Démarrer la collecte**, confirmer l'autorisation temporaire du
+   processus PowerShell de fond. Aucune politique permanente ni demande admin.
+5. Cliquer **Arrêter** pour arrêter proprement après la transaction en cours.
+   Fermer ACR-Optimal demande également l'arrêt. Une fermeture brutale de
+   l'application est détectée par l'identité de son processus propriétaire.
 
-1. Fermer les lanceurs de stockage puis sauvegarder acr-experimental.sqlite3
-   dans un autre dossier. Conserver tous les exports originaux.
-2. Extraire tout le ZIP. Double-cliquer collecteur-windows\Lancer-Collecteur.bat.
-   Accepter O (processus temporaire), puis saisir TT si la session est bien TT.
-   Aucune demande admin. Parametres par defaut : Obersteigen / Skoda Fabia RS
-   Rally2, joueur-local, PlayerDataSaveSlot.sav dans acr\Saved\SaveGames.
-3. La premiere capture importe egalement les tentatives historiques compatibles.
-   Les doublons restent uniques, les validations existantes sont conservees.
-4. Faire une tentative, rester a l'arrivee 10 secondes SANS ouvrir le classement.
-   Noter l'heure et le chrono. Observer si le collecteur annonce une nouvelle ligne.
-5. Ouvrir ensuite le classement de SESSION, photographier secteurs et global.
-   Noter l'heure. Ne pas supposer que l'ouverture est necessaire.
-6. Faire une seconde tentative moins rapide et repeter. Puis fermer completement
-   ACR, relancer meme speciale/voiture, refaire une tentative.
-7. Dans l'interface, Actualiser : les nouvelles lignes doivent etre EN ATTENTE.
-   Valider uniquement apres comparaison avec le jeu via une revue de stockage.
-8. Transmettre collecteur.csv, session.json, les nouvelles copies .sav et captures
-   afin de verifier chronologie, secteur/global, identifiants, retention et doublons.
+Les anciens fichiers BAT du collecteur restent disponibles : ils utilisent
+maintenant le même worker, sans limite par défaut. Pour un diagnostic court,
+choisir une durée positive (1 à 1440 minutes). Le paramètre CLI -Minutes conserve
+ce rôle ; -Once conserve le test d'une seule lecture. Lancer l'application à
+nouveau puis cliquer Démarrer reprend la lecture sans doublons. La collecte ne
+démarre pas silencieusement au lancement de l'application : confirmer TT.
 
-Les preuves sont dans %LOCALAPPDATA%\ACR-Optimal\CollectorEvidence\<session>.
-Le collecteur s'arrete apres 15 minutes (configurable 1-120), 500 captures ou
-100 MiB. Fermer sa fenetre pour arreter plus tot. Conflit : capture et conflit
-conserves, arret ; consulter les rapports du stockage. Source non reconnue :
-copie conservee, erreur visible, pas d'import fabrique. Un fichier non reconnu
-n'est pas retraité avant que son contenu change ; relancer apres correction.
-Une courte indisponibilite du fichier differe la lecture. Une sauvegarde peut
-remplacer plusieurs fois son contenu entre lectures : une tentative jamais
-persistee peut manquer. Collecteur actif uniquement pendant ce test.
+## États et indicateurs
 
-Source actuelle demontree sur les copies : blocs contenant durees individuelles
-et cumuls. Les trailers non nuls/voitures differentes dans un bloc restent refuses
-par le lecteur. Pas de detection automatique speciale/voiture/penalites/validite,
-pas de validation globale du format. Ne pas utiliser hors TT ou sur d'autres
-speciales/voitures sans protocole adapte. Pas d'installateur unique encore.
+- Arrêté : worker terminé ou pas encore démarré.
+- Démarrage : lancement du worker et ouverture de la base.
+- En attente du jeu : aucun processus configuré détecté. Le worker reste actif.
+- Connecté au jeu : processus détecté, source pas encore prête.
+- Collecte active : processus détecté et surveillance de la source disponible.
+- Erreur : lecture/import refusé, conflit, démarrage bloqué ou suivi indisponible.
 
-Ligne de commande optionnelle : Collecteur-Experimental.ps1 -SavePath 'C:\...\PlayerDataSaveSlot.sav'
--DatabasePath 'C:\...\autre-base-experimentale.sqlite3' -Minutes 30.
-StageId, CarId et Profile sont egalement parametres ; ne pas changer leurs valeurs
-sans connaitre les identifiants exacts et la compatibilite du lecteur.
+« Connecté » signifie UNIQUEMENT processus présent : aucune connexion API,
+mémoire partagée ou reconnaissance automatique du mode TT. Les noms proposés
+sont acr et acr-Win64-Shipping. S'ils ne correspondent pas au jeu sur votre PC,
+relever le nom dans Gestionnaire des tâches > Détails et le renseigner dans
+Processus du jeu (séparés par virgules, extension .exe facultative). Ne pas
+utiliser un nom générique comme Steam. Un nouvel identifiant PID/heure de
+lancement provoque une reprise de lecture. Après fermeture du jeu, les derniers
+changements du fichier sont encore lus et le worker attend le prochain lancement.
+La déclaration TT doit rester vraie pour les sessions jouées pendant la collecte.
+Le worker ne peut pas détecter un passage à un autre mode : toute donnée inconnue
+reste en quarantaine.
 
-## Validation developpeur
+L'écran indique état, nombre total conservé/admissible, dernier événement reçu
+(heure locale) et dernière tentative ajoutée durant cette collecte. Cette
+« dernière » est une ligne importée, PAS une date d'arrivée automatiquement
+prouvée. Aucun nouveau record n'est créé à partir d'une tentative non revue.
+Les changements déclenchent une actualisation du tableau de bord ; les chronos
+admissibles restent seuls dans les statistiques.
 
-Tests offline avec les copies fournies : 7 imports initiaux, 0 nouvel import en
-relecture, puis 1 nouvelle tentative dans la derniere copie ; 8 inconnues,
-0 conflit, sources intactes et integrite SQLite OK. Tests PowerShell 7/Linux :
-seul le nom de la DLL native est adapte vers libsqlite3.so.0 dans une copie de
-travail ; la declaration Windows du harnais permet de tester le script offline.
-Aucun jeu n'est simule, ces tests ne prouvent ni la surveillance Windows ni
-la capture a l'arrivee. -Once effectue un seul passage (utile au diagnostic).
-Suite : tests/verify_collector.ps1, Root, WorkDir neuf, BaselineSave, NewSave.
+## Données, journaux et fiabilité
+
+La base EXISTANTE %LOCALAPPDATA%\ACR-Optimal\Experimental\acr-experimental.sqlite3
+est conservée sans migration. Même importeur, mêmes clés/hashes, transactions
+et exclusions. Un verrou de fichier propre à la base refuse deux collecteurs
+concurrents (GUI/CLI/deux applications), se libère à la fin du processus et ne
+verrouille aucun fichier du jeu. Les revues et imports manuels restent possibles.
+
+Chaque démarrage crée %LOCALAPPDATA%\ACR-Optimal\CollectorEvidence\<session> :
+- session.json : contexte, durée, noms de processus, propriétaire ;
+- status.json : état atomiquement publié et dernier événement ;
+- events.csv / errors.csv : événements et erreurs (créé si erreur) ;
+- collecteur.csv : imports et source SHA256 ;
+- stdout.log / stderr.log : sortie du processus lancé depuis l'interface ;
+- evidence-001, evidence-002... : copies SAV et dossiers d'export.
+
+Deux lectures identiques espacées de 600 ms précèdent l'import. Un fichier
+absent ou momentanément verrouillé ne tue pas le worker ; une erreur déclenche
+une nouvelle tentative après 10 secondes et un message visible. Les conflits
+sont conservés puis arrêtent le worker en erreur pour examen. Aucun ancien
+contenu n'est remplacé. Un changement de jeu redémarre la lecture même si le
+hash du fichier est inchangé ; l'importeur empêche les doublons.
+
+Les anciennes limites de 500 captures/100 MiB n'arrêtent plus la collecte :
+un nouveau segment de preuves est créé. Aucune ancienne preuve n'est supprimée.
+Prévoir l'espace disque pour les preuves, et archiver les anciens dossiers
+manuellement après arrêt si nécessaire. Le jeu peut écraser plusieurs fois une
+sauvegarde entre lectures : une tentative jamais persistée reste inaccessible.
+La lecture reste limitée à 8 MiB et aux structures vérifiées du décodeur.
+
+## Protocole de test Windows
+
+Avant le premier test, fermer les outils puis copier la base SQLite et les
+preuves ailleurs. Garder les originaux. Noter le total initial : actuellement
+11 tentatives conservées, dont les seules revues sont admissibles.
+
+1. Démarrer depuis ACR-Optimal avec durée 0 AVANT le jeu : état attente du jeu,
+   historique relu sans doublon. Lancer ACR en TT : collecte active.
+2. Jouer plus de 20 minutes. Faire une tentative APRÈS la quinzième minute :
+   nouvelle ligne importée, sans arrêt du worker. Vérifier secteurs/classement.
+3. Faire une tentative moins rapide : elle doit être ajoutée aussi, en attente.
+4. Fermer complètement le jeu : attente, application toujours ouverte. Relancer
+   même spéciale/voiture : reprise automatique, anciennes lignes inchangées.
+5. Cliquer Arrêter puis Démarrer : pas de doublons. Fermer ACR-Optimal et relancer,
+   confirmer TT et Démarrer : mêmes données, collecte reprise.
+6. Tester durée 1 minute dans un essai séparé : arrêt à l'expiration, interface
+   toujours utilisable. Puis revenir à 0 pour l'usage normal.
+7. Ouvrir un second collecteur : erreur explicite, premier reste actif.
+8. Vérifier que les nouvelles tentatives n'entrent pas dans les statistiques
+   avant revue. Ne pas marquer valides des pénalités/abandons par supposition.
+
+Transmettre status.json, session.json, collecteur.csv, events.csv, errors.csv si
+présent, derniers secteurs.csv et captures du classement pour les nouvelles
+lignes. Les journaux ne peuvent pas prouver seuls le moment où vous avez ouvert
+le classement : noter cette action durant le test.
+
+## Tests réalisés et limites
+
+PowerShell 7/Linux, SQLite réelle (uniquement le nom de DLL adapté dans une
+copie de test) : import/réimport/nouvelle copie, quarantaine, source intacte,
+intégrité SQLite et lecture seule ; six états et durée 0 sans limite vérifiée
+avec une horloge de test ; publication atomique des états. Cycle de processus
+simulé : attente, lancement, fermeture, relancement, capture, refus du second
+worker, arrêt et reprise sans doublon. Ce test n'exécute PAS Assetto Corsa Rally.
+Une session Windows réelle >15 minutes, les noms du processus, le processus
+PowerShell de fond et les commandes WPF restent à valider sur votre PC.
+
+Les relances d'une même erreur réutilisent la copie déjà conservée au lieu de
+recopier indéfiniment le même SAV. Les preuves et données existantes ne sont pas
+supprimées. Le test de cycle de vie vérifie également l'arrêt après disparition
+du processus propriétaire, afin de ne pas laisser un worker orphelin.
+
+Le harnais Linux vérifie la disparition du propriétaire par PID, sans comparer
+son horodatage (les horodatages .NET Linux peuvent varier entre lectures). Sur
+Windows, la commande GUI transmet et vérifie également l'heure exacte de création
+pour éviter la confusion en cas de réutilisation du PID ; ce point reste inclus
+dans le protocole de test Windows, pas présenté comme vérifié sous Linux.

@@ -27,7 +27,11 @@ try {
  <DockPanel x:Name="ContextBar" Grid.Row="1"><Button x:Name="Refresh" Content="Actualiser" DockPanel.Dock="Right"/><ComboBox x:Name="Context" MinWidth="500" Margin="0,5,10,5" Foreground="#101827"/></DockPanel>
  <Border x:Name="RecordsCard" Grid.Row="2" Background="#1E293B" Padding="18" CornerRadius="10" Margin="0,10"><StackPanel><TextBlock x:Name="Summary" FontSize="23" FontWeight="SemiBold"/><TextBlock x:Name="Counts" Margin="0,10,0,0" Foreground="#93C5FD"/></StackPanel></Border>
  <TabControl x:Name="Navigation" Grid.Row="3" Foreground="#101827">
-  <TabItem Header="Chronométrage"><Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="110"/></Grid.RowDefinitions><DataGrid x:Name="Attempts"/><TextBox x:Name="Details" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/></Grid></TabItem>
+  <TabItem Header="Chronométrage"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="110"/></Grid.RowDefinitions>
+ <StackPanel Margin="5"><WrapPanel><CheckBox x:Name="ConfirmTT" Content="Je confirme le contre-la-montre" VerticalAlignment="Center" Margin="5"/><Button x:Name="StartCollector" Content="Démarrer la collecte"/><Button x:Name="StopCollector" Content="Arrêter" IsEnabled="False"/><TextBlock Text="Durée test (min, 0 = illimitée)" VerticalAlignment="Center"/><TextBox x:Name="CollectorMinutes" Text="0" Width="45" Margin="5" VerticalContentAlignment="Center"/></WrapPanel>
+ <WrapPanel><TextBlock Text="Processus du jeu :" VerticalAlignment="Center"/><TextBox x:Name="GameNames" Text="acr,acr-Win64-Shipping" Width="250" Margin="5"/><TextBlock Text="Spéciale/voiture : sélection ci-dessus, ou Obersteigen/Fabia si aucune donnée." VerticalAlignment="Center" TextWrapping="Wrap"/></WrapPanel>
+ <TextBlock x:Name="CollectorState" Text="Collecteur : arrêté" TextWrapping="Wrap"/><TextBlock x:Name="CollectorLast" Text="Aucun événement reçu." TextWrapping="Wrap"/><TextBlock x:Name="CollectorInfo" TextWrapping="Wrap"/>
+ </StackPanel><DataGrid x:Name="Attempts" Grid.Row="1"/><TextBox x:Name="Details" Grid.Row="2" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/></Grid></TabItem>
   <TabItem Header="Performances"><TabControl>
    <TabItem Header="Meilleurs secteurs"><DataGrid x:Name="Sectors"/></TabItem>
    <TabItem Header="Progression"><Grid><Grid.RowDefinitions><RowDefinition Height="230"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Canvas x:Name="Chart" Background="#1E293B" ClipToBounds="True"/><TextBlock Grid.Row="1" Text="Bleu : chrono complet | Vert : optimal connu. Ordre d'import, pas date de course." Margin="10"/><DataGrid Grid.Row="2" x:Name="Progress"/></Grid></TabItem>
@@ -44,7 +48,8 @@ try {
 </Window>
 '@
  $window=[Windows.Markup.XamlReader]::Load((New-Object Xml.XmlNodeReader $xaml))
- $ui=@{};foreach($name in @('Navigation','ContextBar','RecordsCard','SetupHost','HistoryAttempts','HistorySetups','Refresh','Context','Summary','Counts','Sectors','Attempts','Details','Progress','Chart','Left','Right','Compare','Comparison','CompareNote','Footer')) { $ui[$name]=$window.FindName($name) }
+ $ui=@{};foreach($name in @('ConfirmTT','StartCollector','StopCollector','CollectorMinutes','GameNames','CollectorState','CollectorLast','CollectorInfo','Navigation','ContextBar','RecordsCard','SetupHost','HistoryAttempts','HistorySetups','Refresh','Context','Summary','Counts','Sectors','Attempts','Details','Progress','Chart','Left','Right','Compare','Comparison','CompareNote','Footer')) { $ui[$name]=$window.FindName($name) }
+ $script:collector=$null;$script:collectorTimer=$null;$script:collectorLastEvent='';
  $script:contexts=@();$script:rows=@();$script:progress=@();$script:loading=$false
  function GridRows($control,$rows) { $control.ItemsSource=@($rows) }
  function DrawChart {
@@ -82,6 +87,11 @@ try {
  function RefreshData {
   $script:loading=$true
   try {
+   if ($null -eq $db -and (Test-Path -LiteralPath $DatabasePath -PathType Leaf)) {
+    $db=New-Object ACROptimal.Experimental.Database($DatabasePath,$true)
+    if($db.Query('PRAGMA application_id',@())[0]['application_id'] -ne 1094931032 -or $db.Query('PRAGMA user_version',@())[0]['user_version'] -ne 1){$db.Dispose();$db=$null;throw 'Base incompatible.'}
+    $db.Exec('PRAGMA busy_timeout=5000',@())
+   }
    if ($null -eq $db) {
     $ui.Summary.Text='Aucune base : importer des exports avec le lanceur de stockage.'
     $ui.Counts.Text='Setup Engineer reste disponible. Aucune base créée ou remplacée.'
@@ -128,7 +138,47 @@ try {
  Import-Module (Join-Path $PSScriptRoot '..\setup-engineer\SetupHistory.psm1') -Force
  $setupView=New-AcrSetupView -SavePath $SavePath -SnapshotRoot $SnapshotRoot
  $ui.SetupHost.Content=$setupView.View
+ Import-Module (Join-Path $PSScriptRoot '..\collecteur-windows\CollectorControl.psm1')
+ $ui.StartCollector.Add_Click({try {
+  if($null -ne $script:collector -and -not $script:collector.Process.HasExited){return}
+  if(-not $ui.ConfirmTT.IsChecked){throw 'Confirme le contre-la-montre avant de démarrer.'}
+  $minutes=0;if(-not [int]::TryParse($ui.CollectorMinutes.Text,[ref]$minutes) -or $minutes -lt 0 -or $minutes -gt 1440){throw 'Durée : entier entre 0 et 1440. 0 = illimitée.'}
+  $stage='AlsaceS4SaverneShort1Forward';$car='SkodaFabiaRSRally2'
+  if($ui.Context.SelectedIndex -ge 0){$c=$script:contexts[$ui.Context.SelectedIndex];$stage=$c.stage;$car=$c.car}
+  $answer=[Windows.MessageBox]::Show("Démarrer pour $stage / $car ? Un processus PowerShell de collecte utilisera une autorisation temporaire Bypass, sans modifier la politique permanente. Les nouvelles tentatives resteront en attente de validation.",'ACR-Optimal',[Windows.MessageBoxButton]::YesNo)
+  if($answer -ne [Windows.MessageBoxResult]::Yes){return}
+  $names=@($ui.GameNames.Text.Split(',')|ForEach-Object {$_.Trim()}|Where-Object {$_})
+  $script:collector=Start-AcrCollector -SavePath (Join-Path $env:LOCALAPPDATA 'acr\Saved\SaveGames\PlayerDataSaveSlot.sav') -StageId $stage -CarId $car -Profile $Profile -DatabasePath $DatabasePath -Minutes $minutes -GameProcessNames $names
+  $script:collectorLastEvent='';$ui.CollectorState.Text='Collecteur : démarrage';$ui.StartCollector.IsEnabled=$false;$ui.StopCollector.IsEnabled=$true
+  $ui.CollectorInfo.Text="Journaux : $($script:collector.Root)"
+ }catch{ShowError $_}})
+ $ui.StopCollector.Add_Click({try{Stop-AcrCollector $script:collector;$ui.CollectorState.Text='Arrêt demandé, fin de la transaction en cours.'}catch{ShowError $_}})
+ $script:collectorTimer=New-Object Windows.Threading.DispatcherTimer
+ $script:collectorTimer.Interval=[TimeSpan]::FromSeconds(1)
+ $script:collectorTimer.Add_Tick({try {
+  if($null -eq $script:collector){return}
+  $state=Read-AcrCollectorStatus $script:collector
+  if($null -ne $state){
+   $labels=@{Arrete='arrêté';Demarrage='démarrage';ConnecteAuJeu='connecté au jeu';EnAttenteDuJeu='en attente du jeu';CollecteActive='collecte active';Erreur='erreur'}
+   $ui.CollectorState.Text="Collecteur : $($labels[$state.State]) | $($state.Attempts) conservées | $($state.Eligible) admissibles"
+   $stamp=[DateTime]::Parse($state.LastEventUtc).ToLocalTime().ToString('HH:mm:ss')
+   $ui.CollectorLast.Text="Dernier événement ($stamp) : $($state.LastEvent)"
+   if($state.Error){$ui.CollectorLast.Text+=" | $($state.Error)"}
+   if($null -ne $state.LastAttempt){$ui.CollectorInfo.Text="Dernière tentative ajoutée : ID $($state.LastAttempt.Id), $(Format-AcrTime $state.LastAttempt.Seconds), en attente. Journaux : $($script:collector.Root)"}
+   if($state.LastEventUtc -ne $script:collectorLastEvent){$script:collectorLastEvent=$state.LastEventUtc;RefreshData}
+  }
+  if($script:collector.Process.HasExited){
+   $ui.StartCollector.IsEnabled=$true;$ui.StopCollector.IsEnabled=$false
+   if($script:collector.Process.ExitCode -ne 0 -or $null -eq $state){$ui.CollectorState.Text="Collecteur : erreur. Consulter stderr.log et errors.csv : $($script:collector.Root)"}
+  }
+ }catch{$ui.CollectorState.Text="Collecteur : erreur de suivi : $($_.Exception.Message)"}})
+ $script:collectorTimer.Start()
+ $window.Add_Closing({try{Stop-AcrCollector $script:collector}catch{}})
  RefreshData
  $ui.Navigation.SelectedIndex=[Array]::IndexOf(@('Chronos','Performances','Setup','Historique'),$InitialPage)
  $window.ShowDialog()|Out-Null
-} finally {if ($null -ne $db) {$db.Dispose()}}
+} finally {
+ if($null -ne $script:collectorTimer){$script:collectorTimer.Stop()}
+ if($null -ne $script:collector){Stop-AcrCollector $script:collector;[void]$script:collector.Process.WaitForExit(5000)}
+ if ($null -ne $db) {$db.Dispose()}
+}

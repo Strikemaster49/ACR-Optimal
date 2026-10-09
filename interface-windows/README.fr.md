@@ -84,3 +84,12 @@ Double observée au lancement. Test verify_json_records.ps1 : erreur initiale
 reproduite puis zéro/une/plusieurs lignes testées avec les deux sémantiques de
 pipeline ; ce test s'exécute sous PowerShell 7 en reproduisant l'énumération 5.1.
 Le lanceur affiche désormais la ligne et la pile d'appel en cas d'erreur.
+
+## Collecte depuis l'application
+
+Chronométrage contient maintenant Démarrer/Arrêter, une confirmation TT, durée
+de test (0 = illimitée), noms de processus et indicateurs d'état/dernier événement.
+Le moteur de chronométrage ouvre sa propre connexion SQLite transactionnelle ;
+la vue conserve sa connexion readonly et s'actualise après un événement.
+Le collector ne valide jamais les nouvelles lignes. [Protocole quotidien et
+reconnexion](../collecteur-windows/README.fr.md). Setup Engineer est inchangé.
