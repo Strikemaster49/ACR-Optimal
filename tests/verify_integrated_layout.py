@@ -7,7 +7,9 @@ a=xaml(root/'interface-windows/Interface.ps1');b=xaml(root/'setup-engineer/Setup
 assert a.tag.endswith('Window') and b.tag.endswith('UserControl')
 nav=next(n for n in a.iter() if n.attrib.get('{http://schemas.microsoft.com/winfx/2006/xaml}Name')=='Navigation')
 assert [n.attrib['Header'] for n in nav]==['Chronométrage','Performances','Setup Engineer','Historique']
-for x in [a,b]:
+c=xaml(root/'ocr-windows/OcrView.ps1')
+assert c.tag.endswith('UserControl')
+for x in [a,b,c]:
  names=[n.attrib['{http://schemas.microsoft.com/winfx/2006/xaml}Name'] for n in x.iter() if '{http://schemas.microsoft.com/winfx/2006/xaml}Name' in n.attrib]
  assert len(names)==len(set(names))
 assert 'ShowDialog' not in (root/'setup-engineer/SetupView.ps1').read_text(encoding='utf-8-sig').replace('$d.ShowDialog()', '')

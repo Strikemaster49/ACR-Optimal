@@ -37,7 +37,7 @@ try {
    <TabItem Header="Progression"><Grid><Grid.RowDefinitions><RowDefinition Height="230"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Canvas x:Name="Chart" Background="#1E293B" ClipToBounds="True"/><TextBlock Grid.Row="1" Text="Bleu : chrono complet | Vert : optimal connu. Ordre d'import, pas date de course." Margin="10"/><DataGrid Grid.Row="2" x:Name="Progress"/></Grid></TabItem>
    <TabItem Header="Comparer les tentatives"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal"><ComboBox x:Name="Left" Width="330" Margin="10"/><ComboBox x:Name="Right" Width="330" Margin="10"/><Button x:Name="Compare" Content="Comparer"/></StackPanel><TextBlock x:Name="CompareNote" Grid.Row="1" Margin="10" TextWrapping="Wrap"/><DataGrid x:Name="Comparison" Grid.Row="2"/></Grid></TabItem>
   </TabControl></TabItem>
-  <TabItem Header="Setup Engineer"><ContentControl x:Name="SetupHost"/></TabItem>
+  <TabItem Header="Setup Engineer"><TabControl><TabItem Header="Versions et comparaison"><ContentControl x:Name="SetupHost"/></TabItem><TabItem Header="Détection OCR (expérimentale)"><ContentControl x:Name="OcrHost"/></TabItem></TabControl></TabItem>
   <TabItem Header="Historique"><TabControl>
    <TabItem Header="Toutes les tentatives"><DataGrid x:Name="HistoryAttempts"/></TabItem>
    <TabItem Header="Versions de setups"><DockPanel><TextBlock DockPanel.Dock="Top" Margin="10" Text="Versions JSON conservées. Comparaison disponible dans Setup Engineer. Aucun lien historique supposé avec les chronos." TextWrapping="Wrap"/><DataGrid x:Name="HistorySetups"/></DockPanel></TabItem>
@@ -48,7 +48,7 @@ try {
 </Window>
 '@
  $window=[Windows.Markup.XamlReader]::Load((New-Object Xml.XmlNodeReader $xaml))
- $ui=@{};foreach($name in @('ConfirmTT','StartCollector','StopCollector','CollectorMinutes','GameNames','CollectorState','CollectorLast','CollectorInfo','Navigation','ContextBar','RecordsCard','SetupHost','HistoryAttempts','HistorySetups','Refresh','Context','Summary','Counts','Sectors','Attempts','Details','Progress','Chart','Left','Right','Compare','Comparison','CompareNote','Footer')) { $ui[$name]=$window.FindName($name) }
+ $ui=@{};foreach($name in @('ConfirmTT','StartCollector','StopCollector','CollectorMinutes','GameNames','CollectorState','CollectorLast','CollectorInfo','Navigation','ContextBar','RecordsCard','SetupHost','OcrHost','HistoryAttempts','HistorySetups','Refresh','Context','Summary','Counts','Sectors','Attempts','Details','Progress','Chart','Left','Right','Compare','Comparison','CompareNote','Footer')) { $ui[$name]=$window.FindName($name) }
  $script:collector=$null;$script:collectorTimer=$null;$script:collectorLastEvent='';
  $script:contexts=@();$script:rows=@();$script:progress=@();$script:loading=$false
  function GridRows($control,$rows) { $control.ItemsSource=@($rows) }
@@ -138,6 +138,9 @@ try {
  Import-Module (Join-Path $PSScriptRoot '..\setup-engineer\SetupHistory.psm1') -Force
  $setupView=New-AcrSetupView -SavePath $SavePath -SnapshotRoot $SnapshotRoot
  $ui.SetupHost.Content=$setupView.View
+ Import-Module (Join-Path $PSScriptRoot '..\ocr-windows\OcrView.psm1')
+ $ocrView=New-AcrSetupOcrView -SavePath $SavePath -SnapshotRoot $SnapshotRoot
+ $ui.OcrHost.Content=$ocrView.View
  Import-Module (Join-Path $PSScriptRoot '..\collecteur-windows\CollectorControl.psm1')
  $ui.StartCollector.Add_Click({try {
   if($null -ne $script:collector -and -not $script:collector.Process.HasExited){return}

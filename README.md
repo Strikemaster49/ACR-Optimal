@@ -33,3 +33,8 @@ Chronométrage, Performances, Setup Engineer et Historique. Les anciens lanceurs
 ouvrent la même application. [Instructions Windows](interface-windows/README.fr.md).
 Le [script d'installateur unique](packaging-windows/README.fr.md) est préparé ;
 sa compilation et son installation restent à valider sous Windows.
+
+La [détection expérimentale du setup par OCR](ocr-windows/README.fr.md) est
+intégrée au sous-onglet Setup Engineer. Elle est facultative et locale, capture
+uniquement le titre, conserve des preuves et demande les confirmations manuelles.
+Aucune association aux chronos n’est activée ; son OCR reste à valider sur Windows.

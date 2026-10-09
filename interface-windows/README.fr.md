@@ -93,3 +93,10 @@ Le moteur de chronométrage ouvre sa propre connexion SQLite transactionnelle ;
 la vue conserve sa connexion readonly et s'actualise après un événement.
 Le collector ne valide jamais les nouvelles lignes. [Protocole quotidien et
 reconnexion](../collecteur-windows/README.fr.md). Setup Engineer est inchangé.
+
+## Détection du setup (facultative)
+
+Setup Engineer contient un sous-onglet OCR expérimental, désactivé par défaut.
+Voir le [protocole Windows](../ocr-windows/README.fr.md) pour calibrer la bande
+du titre, tester le chargement et conserver une déclaration manuelle. Aucune
+liaison automatique aux tentatives et aucune modification de la base SQLite.
