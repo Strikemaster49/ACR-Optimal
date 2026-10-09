@@ -88,7 +88,7 @@ try {
     $ui.Footer.Text="Base absente : $DatabasePath";RefreshHistory;return
    }
    $report=Export-AcrStatistics $db $Profile (Join-Path $env:LOCALAPPDATA 'ACR-Optimal\Experimental\InterfaceRapports')
-   $script:summaries=@(Get-Content (Join-Path $report 'resume.json') -Raw|ConvertFrom-Json);$script:gains=@(Get-Content (Join-Path $report 'gains-secteurs.json') -Raw|ConvertFrom-Json);$script:progressAll=@(Get-Content (Join-Path $report 'progression.json') -Raw|ConvertFrom-Json)
+   $script:summaries=@(Read-AcrJsonRecords (Join-Path $report 'resume.json'));$script:gains=@(Read-AcrJsonRecords (Join-Path $report 'gains-secteurs.json'));$script:progressAll=@(Read-AcrJsonRecords (Join-Path $report 'progression.json'))
    $script:allRows=@($db.Query('SELECT a.*,CASE WHEN e.id IS NULL THEN 0 ELSE 1 END AS eligible FROM attempts a LEFT JOIN eligible_attempts e ON e.id=a.id WHERE a.profile=? ORDER BY a.id',@($Profile)))
    $script:contexts=@($script:allRows|ForEach-Object {[pscustomobject]@{stage=$_['stage'];car=$_['car'];layout=$_['layout']}}|Sort-Object stage,car,layout -Unique)
    $ui.Context.Items.Clear();foreach($c in $script:contexts){$ui.Context.Items.Add("$($c.stage) / $($c.car) / secteurs $($c.layout)")|Out-Null}

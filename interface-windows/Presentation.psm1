@@ -1,4 +1,10 @@
 Set-StrictMode -Version 2
+function Read-AcrJsonRecords([string]$Path) {
+    # Windows PowerShell 5.1 emits a JSON array as one pipeline object.
+    # Assign first, then enumerate explicitly so every caller receives records.
+    $decoded=Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    foreach ($record in $decoded) { $record }
+}
 function ConvertTo-AcrMilliseconds($Seconds) {
     return [long][Math]::Round(([double]$Seconds)*1000,0,[MidpointRounding]::AwayFromZero)
 }
@@ -18,4 +24,4 @@ function Get-AcrDisplayStatus($Row) {
     if ($Row['review_origin'] -eq 'user-attested') { return 'Revue - exclue (voir details)' }
     return 'En attente de validation'
 }
-Export-ModuleMember -Function ConvertTo-AcrMilliseconds,Format-AcrTime,Format-AcrGain,Get-AcrDisplayStatus
+Export-ModuleMember -Function Read-AcrJsonRecords,ConvertTo-AcrMilliseconds,Format-AcrTime,Format-AcrGain,Get-AcrDisplayStatus

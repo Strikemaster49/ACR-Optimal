@@ -77,3 +77,10 @@ avec Root, SavePath vers UNE COPIE et WorkDir neuf, PowerShell x64 STA.
 L'[installateur unique](../packaging-windows/README.fr.md) est préparé avec Inno
 Setup. Aucun installateur compilé/testé n'est encore fourni. Il conservera les
 données utilisateur lors des mises à jour et de la désinstallation.
+
+Correction de compatibilité PowerShell 5.1 : les tableaux JSON des rapports sont
+énumérés explicitement avant formatage. Cela évite la conversion Object[] vers
+Double observée au lancement. Test verify_json_records.ps1 : erreur initiale
+reproduite puis zéro/une/plusieurs lignes testées avec les deux sémantiques de
+pipeline ; ce test s'exécute sous PowerShell 7 en reproduisant l'énumération 5.1.
+Le lanceur affiche désormais la ligne et la pile d'appel en cas d'erreur.
