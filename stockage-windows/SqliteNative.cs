@@ -39,8 +39,9 @@ namespace ACROptimal.Experimental {
             return Text(ptr,length);
         }
         void Check(int rc) { if (rc!=0) throw new InvalidOperationException("SQLite " + rc + ": " + CString(sqlite3_errmsg(db))); }
-        public Database(string path) {
-            int rc=sqlite3_open_v2(Utf8(path),out db,6,IntPtr.Zero);
+        public Database(string path) : this(path, false) { }
+        public Database(string path, bool readOnly) {
+            int rc=sqlite3_open_v2(Utf8(path),out db,readOnly ? 1 : 6,IntPtr.Zero);
             if (rc!=0) { string message=CString(sqlite3_errmsg(db)); Dispose(); throw new InvalidOperationException(message); }
         }
         IntPtr Prepare(string sql, object[] parameters) {
