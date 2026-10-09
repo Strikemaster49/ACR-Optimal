@@ -21,3 +21,9 @@ lecture seule : records, secteurs, progression, comparaison et statuts de valida
 Le [collecteur passif expérimental](collecteur-windows/README.fr.md) surveille une
 sauvegarde et importe les captures compatibles en quarantaine. Son protocole doit
 encore être vérifié dans le jeu, notamment avant l'ouverture du classement.
+
+Le prototype [ACR Setup Engineer](setup-engineer/README.fr.md) lit les setups
+observés, conserve plusieurs versions JSON et compare les réglages. Son
+[audit de faisabilité et de licence](setup-engineer/AUDIT.fr.md) explique les
+limites du projet tiers, les unités/plages inconnues et l'absence de liaison
+historique automatique avec les performances. Aucune écriture SAV.

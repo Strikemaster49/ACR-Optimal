@@ -193,3 +193,27 @@ clairement signalées et ne remplacent pas le minimum théorique.
 
 Ce document spécifie les fonctionnalités à développer. Il ne déclare pas ces
 fonctionnalités implémentées, et ne réduit pas la priorité donnée à l'acquisition.
+
+## ACR Setup Engineer — prototype indépendant
+
+La lecture des setups sauvegardés, leur versionnage et leur comparaison sont
+séparés du stockage des chronos. Le module de lecture ne dépend pas de WPF ;
+l'interface Windows y accède depuis le bouton Setup Engineer. Aucun SAV n'est
+modifié et la base des performances existante reste intacte.
+
+Chaque réglage conserve clé, valeur brute, valeur numérique ou enum, provenance,
+unité et plage autorisée. Une unité ou limite non vérifiée reste inconnue. Un
+futur catalogue devra être attesté par voiture et version du jeu, avec preuve
+des menus. Les recommandations reposent sur un ressenti déclaré, une phase et
+une surface, avec hypothèses conditionnelles et compromis ; aucune cible
+numérique non vérifiée ni diagnostic télémétrique inventé.
+
+Les liaisons setup/tentative devront être prospectives et explicites, par
+VersionId, profil, AttemptKey, spéciale et voiture, avec preuve du setup appliqué.
+Aucun rapprochement rétroactif par date, nom ou dernier fichier disponible. Une
+sauvegarde ne prouve pas le setup actif. Les versions JSON et les modèles de
+liaison restent indépendants de la base des chronos dans cette première étape.
+
+L'audit du dépôt tiers et de ses archives n'a trouvé ni sources ni licence de
+réutilisation : aucun code ni binaire tiers n'est intégré. Toute reprise future
+nécessite l'accès aux sources et des conditions explicites de réutilisation.

@@ -19,7 +19,7 @@ try {
  </Window.Resources>
  <Grid Margin="22"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
  <StackPanel><TextBlock Text="ACR-Optimal" FontSize="30" FontWeight="Bold"/><TextBlock Text="Donnees experimentales | validation manuelle | lecture seule" Foreground="#94A3B8" Margin="0,4,0,14"/></StackPanel>
- <DockPanel Grid.Row="1"><Button x:Name="Refresh" Content="Actualiser" DockPanel.Dock="Right"/><ComboBox x:Name="Context" MinWidth="600" Margin="0,5,10,5" Foreground="#101827"/></DockPanel>
+ <DockPanel Grid.Row="1"><Button x:Name="Engineer" Content="Setup Engineer" DockPanel.Dock="Right"/><Button x:Name="Refresh" Content="Actualiser" DockPanel.Dock="Right"/><ComboBox x:Name="Context" MinWidth="500" Margin="0,5,10,5" Foreground="#101827"/></DockPanel>
  <Border Grid.Row="2" Background="#1E293B" Padding="18" CornerRadius="10" Margin="0,10"><StackPanel><TextBlock x:Name="Summary" FontSize="23" FontWeight="SemiBold"/><TextBlock x:Name="Counts" Margin="0,10,0,0" Foreground="#93C5FD"/></StackPanel></Border>
  <TabControl Grid.Row="3" Foreground="#101827">
   <TabItem Header="Meilleurs secteurs"><DataGrid x:Name="Sectors"/></TabItem>
@@ -32,7 +32,7 @@ try {
 </Window>
 '@
  $window=[Windows.Markup.XamlReader]::Load((New-Object Xml.XmlNodeReader $xaml))
- $ui=@{};foreach($name in @('Refresh','Context','Summary','Counts','Sectors','Attempts','Details','Progress','Chart','Left','Right','Compare','Comparison','CompareNote','Footer')) { $ui[$name]=$window.FindName($name) }
+ $ui=@{};foreach($name in @('Engineer','Refresh','Context','Summary','Counts','Sectors','Attempts','Details','Progress','Chart','Left','Right','Compare','Comparison','CompareNote','Footer')) { $ui[$name]=$window.FindName($name) }
  $script:contexts=@();$script:rows=@();$script:progress=@();$script:loading=$false
  function GridRows($control,$rows) { $control.ItemsSource=@($rows) }
  function DrawChart {
@@ -81,6 +81,7 @@ try {
  }
  function ShowError($errorRecord) {[Windows.MessageBox]::Show($errorRecord.Exception.Message,'ACR-Optimal - erreur')|Out-Null}
  $ui.Refresh.Add_Click({try {RefreshData}catch {ShowError $_}})
+ $ui.Engineer.Add_Click({try { & (Join-Path $PSScriptRoot '..\setup-engineer\SetupWindow.ps1') }catch {ShowError $_}})
  $ui.Context.Add_SelectionChanged({try {ShowContext}catch {ShowError $_}})
  $ui.Chart.Add_SizeChanged({DrawChart})
  $ui.Attempts.Add_SelectionChanged({if($ui.Attempts.SelectedItem){$id=$ui.Attempts.SelectedItem.ID;$a=@($script:rows|Where-Object {$_['id'] -eq $id})[0];$ui.Details.Text="Mode : $($a['mode']) | Validite : $($a['validity']) | Complete : $($a['complete']) | Secteurs verifies : $($a['sectors_verified']) | Penalite : $($a['penalty'])`nCle : $($a['attempt_key'])`nDernier cumul = chrono final uniquement si l'arrivee est confirmee. Validation par le lanceur de stockage."}})
